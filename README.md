@@ -152,3 +152,19 @@ ASV table은 직접 확인해보면 알겠지만 이름들이 md5sum 형식을 �
 
 이외에도 Alignment 기반의 BlastN, Usearch 방식도 있으나, 전체 서열을 모두 비교하는 것 보다 k-mer 기반으로 부분적으로 비교하여 Computational efficiency를 향상시킨 Naive-bayes classifier를 선호한다.
 
+Naive-bayes classifier를 학습시키기 위해서는 Reference database를 선택해야하는데, 가장 대표적인 16S rRNA DB로 저자는 Silva database를 선택했다.
+
+Silva 138.2 Database (latest version)를 통해서 Classifier를 학습시키는데, 문제는 서열정보와 Taxonomy 파일을 다운받아 일일이 학습시키는 것이 꽤나 귀찮은 일이다.
+그러나 이런 귀찮음을 미리 알기라도 한 것인지, 훨씬 수월하게 도움을 줄 수 있는 "RESCRIPt"라는 Qiime Plugin이 존재한다.
+
+### Classifier training command line
+```Linux command
+qiime rescript get-silva-data \
+   --p-version '138.2' \
+   --p-include-species-labels \
+   --p-target 'SSURef_NR99' \
+   --o-silva-sequences silva-138.2-ssu-nr99-rna-seqs.qza \
+   --o-silva-taxonomy silva-138.2-ssu-nr99-tax.qza
+```
+
+rescript plugin을 사용하면 get-silva-data를 통해서 정말 편하게 Reference Sequences & Taxonomy 파일을 얻을 수 있다.

@@ -106,3 +106,27 @@ SingleEnd Fastq 파일이므로 trim-single 옵션을 사용했으며, front (5'
 따라서, 나는 DADA2와의 분석 연계성을 위해 Cutadapat -> DADA2보다는, DADA2에서 제공하는 All-in-one 방식의 분석을 진행하고자 한다.
 
 실제로 두 과정에 따라서 발생한 결과 (Trimming log.txt 파일에서 제공하는 Trimming 결과 통계)가 다른데, 이 이유에 대해서는 아직까지 잘 모른다. (조금 더 공부해봐야 할 듯, 아시는분은 direct messages 부탁드립니다)
+
+
+# 4. Primer sequences trimming + Feature extraction + Denoising (DADA2)
+
+DADA2는 PCR error 및 Chimeric sequence 등을 제거해주는 Quality control software로 가장 대표적이다.
+De novo 방식의 Denoising을 진행하며 최종적으로 ASVs (Amplicon Sequence Variants)를 제공해주는데, 기존의 OTU 방식과 사뭇 다른 방식으로 각 Feature (ex. Species)에 대한 Representative sequences를 제공해준다. OTU 방식보다는 생성되는 Feature 수가 적음에도 불구하고 정확도 측면에서 충분히 개선되었다는 논문이 다수 있어, 이를 기반으로 본인은 DADA2를 통해 분석을 진행하고자 한다.
+
+위에서 적은 생물학적인 이유도 있겠지만, 무엇보다도 본인이 DADA2를 선택한 이유로 다른 Software에서 지원해주지 않는 CCS reads 옵션이 유일무이한 것 같아서 선택한 것도 꽤 컸다.
+
+아무튼, DADA2 분석시 사용했던 Command는 다음과 같다.
+### Qiime DADA2 denoise-ccs command line
+```Linux command
+qiime dada2 denoise-ccs \
+   --i-demultiplexed-seqs ccs_reads.qza \
+   --p-front AGRGTTYGATYMTGGCTCAG \
+   --p-adapter RGYTACCTTGTTACGACTT \
+   --p-min-len 1000 \
+   --p-max-len 1600 \
+   --o-table ccs_table.qza \
+   --o-representative-sequences ccs_rep-reads.qza \
+   --o-denoising-stats ccs_denoising-stats.qza \
+   --p-n-threads 0 #if you want to use all threads you can use, type 0
+```
+

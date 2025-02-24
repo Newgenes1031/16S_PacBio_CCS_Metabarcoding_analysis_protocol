@@ -130,3 +130,16 @@ qiime dada2 denoise-ccs \
    --p-n-threads 0 #if you want to use all threads you can use, type 0
 ```
 
+Input으로 Rawdata로부터 얻은 ccs_reads.qza를 사용한다.
+--p-front/adapter에는 각 방향에 맞는 Primer 서열을 사용, Min/Max length는 DADA2 denoise-ccs에서 제공하는 Min/Max length를 사용했다 (권장하는 길이가 1,000/1,600 bp 였음)
+Output으로는 Feature table, Representative sequences, Denoising statistics 총 3가지 Output이 나오게 된다.
+
+결과로 나온 Feature table에는 생성된 Feature의 개수 (Dereplicated features)
+Representative sequences에는 생성된 Feature의 서열
+Denoising statistics에는 Feature가 생성되기 까지 필터링된 서열의 비율이 나타나져 있다.
+
+저같은 경우는 Feature table에서 Minimum 2 옵션을 통해 Filter-features 를 사용한다.
+그 이유로는 Feature frequency가 1이라는 것은, 정말 우연에 의해서 생긴 서열일 수도 있겠다 생각해서 (주관적) Minimum 2를 사용하게 되었다.
+
+분석에 따라서 더 엄격한 기준 (5 or 10)을 사용할 수도 있다.
+

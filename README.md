@@ -66,9 +66,9 @@ qiime tools import \
   --output-path ccs_reads.qza
 ```
 We are working with PacBio CCS reads, which are:
-✅ Single-end reads
-✅ Phred33V2 quality scores
-✅ FASTQ format with quality scores included
+✅ Single-end reads \
+✅ Phred33V2 quality scores \
+✅ FASTQ format with quality scores included \
 
 Based on these properties, we used the following command to import the data into QIIME 2, generating the ccs_reads.qza file.
 

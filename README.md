@@ -15,3 +15,14 @@ This is an easy guide of PacBio 16S metabarcoding analysis for amateur bioinform
 ```Linux command
 /path/to/FastQC {Input file path} -t {Choose your thread numbers} -o {Output file name}
 ```
+FastQC를 통해 얻은 result.html & result.zip 파일이 포함된 디렉토리에서 이어서 MultiQC를 수행해줍니다.
+
+### MultiQC command line
+```Linux command
+/path/to/multiqc .
+```
+
+다음과 같은 방식으로 MultiQC를 수행하게 되면 "multiqc_report.html" 파일을 통해 나의 Rawdata 정보를 확인할 수 있습니다.
+
+만약, Rawdata가 원하는 길이 (ex. 16S rRNA Full-length = 1,550 bp)보다 너무 작거나 길다면 추후 QC 과정에서 제거할 수 있습니다.
+이 과정이 바로 추후 분석과정에서 얼마나 Filtering 할 지 정하기 위한 과정이라고 생각하면 됩니다.

@@ -51,6 +51,8 @@ Import 과정에서는
 
 16S PacBio CCS에서는 .fastq.gz 파일 형태를 제공해주기 때문에, 우리는 이에 적합한 파일형태로서 .qza format으로 변환하고자 합니다.
 
+
+### QZA importing command line
 ```Linux command
 qiime tools import \
   --type 'SampleData[SequencesWithQuality]' \
@@ -59,3 +61,48 @@ qiime tools import \
   --output-path ccs_reads.qza
 ```
 우리가 가지고 있는 PacBio CCS는 우선 Single end reads이며, Phred33V2를 사용하고, Quality score가 포함되어있는 FastQ format임을 감안해 다음과같은 명령어를 구성했고, 이를 실행하여 ccs_reads.qza 파일을 얻게 되었다.
+
+다만 의아해할만한 것은 input-path에 File path가 .tsv로 끝난다는 것인데, input-format을 잘 보면 SingleEndFastq"Manifest"Phred33V2이다.
+즉, 모든 input에 대해서 Manifest 파일을 통해 importing을 하는 것이다.
+
+Manifest 파일에는 모든 Input file(.fastq.gz)에 대한 절대경로가 포함되어 있으며, 
+header는
+sample-id   absolute-filepath   direction
+이 3가지 Header를 사용한다.
+
+다음 Header에 적절하게 내용을 채운 Manifest.tsv 파일을 input-path로 넣어주면 성공적으로 Importing이 될 것이다.
+
+
+# 3. Primer sequences trimming
+내가 시퀀싱을 부탁한 업체에서는 Demultiplexing을 기본적으로 수행해서 Rawdata를 제공해주기 때문에, Demultiplexing 과정을 생략할 수 있었다.
+Demultiplexing 과정은 Illumina나 PacBio나 크게 다르지 않기떄문에 Barcode sequence에 대한 정보가 있다면 충분히 혼자서도 수행할 수 있습니다.
+
+우리가 16S rRNA Full-length 서열을 분석하는 과정에서, 최초로 Amplicon 을 위해 사용했던 Primer 서열에 대해 알아야 한다.
+
+대표적으로 V1F ~ V9R Primer sequence를 사용한다.
+
+### V1-V9 primer sequences information (Universal primer)
+```
+V1F(27): AGRGTTYGATYMTGGCTCAG
+V9R(1492): RGYTACCTTGTTACGACTT 
+```
+다음 서열을 참고해서 Qiime를 통해 Primer trimming을 진행할 것이다.
+
+### Primer trimming command line
+```
+qiime cutadapt trim-single \
+   --i-demultiplexed-sequences ccs_reads.qza \
+   --p-front AGRGTTYGATYMTGGCTCAG \
+   --p-adapter RGYTACCTTGTTACGACTT \
+   --o-trimmed-sequences ccs_trimmed_reads.qza \
+   --verbose > ccs_trimming_log.txt
+```
+
+나는 Qiime에서 제공하는 Cutadapt을 통해 Primer trimming을 수행하였다.
+SingleEnd Fastq 파일이므로 trim-single 옵션을 사용했으며, front (5')와 adatper (3')에는 각각 Forward primer (27F) / Reverse Primer (1492R) 를 기입하였다.
+
+## 그러나!!
+기존의 Illumina sequencing platform에서는 위 과정과 같이 Cutadapt을 통해서 Forward/Reverse primer trimming을 진행할 수 있었으나, PacBio CCS reads에 대해서 DADA2에서 Primer-trimming까지 진행해주는 옵션이 생기게 되었다.
+따라서, 나는 DADA2와의 분석 연계성을 위해 Cutadapat -> DADA2보다는, DADA2에서 제공하는 All-in-one 방식의 분석을 진행하고자 한다.
+
+실제로 두 과정에 따라서 발생한 결과 (Trimming log.txt 파일에서 제공하는 Trimming 결과 통계)가 다른데, 이 이유에 대해서는 아직까지 잘 모른다. (조금 더 공부해봐야 할 듯, 아시는분은 direct messages 부탁드립니다)

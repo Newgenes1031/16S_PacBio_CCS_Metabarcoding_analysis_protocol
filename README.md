@@ -65,18 +65,18 @@ qiime tools import \
   --input-format SingleEndFastqManifestPhred33V2 \
   --output-path ccs_reads.qza
 ```
-We are working with PacBio CCS reads, which are:
+We are working with PacBio CCS reads, which are: \
 ✅ Single-end reads \
 ✅ Phred33V2 quality scores \
 ✅ FASTQ format with quality scores included \
 
 Based on these properties, we used the following command to import the data into QIIME 2, generating the ccs_reads.qza file.
-
+ \
 🔹 Why is the input file a .tsv instead of .fastq.gz?
 
 You might notice that the input path ends with .tsv, which may seem unexpected.
 This is because we are using the “SingleEndFastqManifestPhred33V2” input format, meaning that all input files are referenced through a Manifest file instead of being passed directly.
-
+ \
 🔹 What is a Manifest file?
 
 A Manifest file contains the absolute paths to all .fastq.gz input files.
@@ -93,7 +93,7 @@ Since the sequencing provider already demultiplexed the reads before delivering 
 (If you need to demultiplex manually, the process is similar for both Illumina and PacBio as long as you have barcode sequence information.)
 
 For 16S rRNA Full-length sequencing, we need to remove the primers that were used during amplicon generation.
-
+ \
 🔹 Commonly Used 16S rRNA Full-Length Primers
 
 The universal V1–V9 primer sequences are as follows:
@@ -117,16 +117,16 @@ I performed primer trimming using Cutadapt, a tool integrated within QIIME 2.
 
 Since we are working with Single-End FASTQ files, I used the trim-single option.
 For --front (5’) and --adapter (3’), I specified the Forward Primer (27F) and Reverse Primer (1492R), respectively.
-
+ \
 🔹 But wait…!!
 
 On the Illumina sequencing platform, we typically trim primers using Cutadapt before proceeding with downstream analysis.
 
 However, with PacBio CCS reads, a new DADA2 option now includes primer trimming as part of its pipeline!
 
-Why is this important?
-	•	Instead of running Cutadapt → DADA2, we can perform all trimming directly in DADA2.
-	•	This improves workflow consistency and ensures better integration with DADA2’s error correction model.
+Why is this important? \
+	•	Instead of running Cutadapt → DADA2, we can perform all trimming directly in DADA2. \
+	•	This improves workflow consistency and ensures better integration with DADA2’s error correction model. \
 
 Interestingly, when comparing trimming logs from both approaches, I noticed differences in the reported trimming statistics.
 I’m still investigating the cause—if anyone has insights, feel free to reach out via direct messages! 🙌
@@ -136,12 +136,12 @@ I’m still investigating the cause—if anyone has insights, feel free to reach
 
 DADA2 is one of the most widely used tools for quality control in metabarcoding analysis.
 It performs de novo denoising by removing PCR errors, chimeric sequences, and more.
-
-🔹 Why DADA2?
-	•	Instead of clustering into OTUs (Operational Taxonomic Units), DADA2 provides ASVs (Amplicon Sequence Variants).
-	•	ASVs provide higher accuracy while generating fewer total features than OTUs.
-	•	Multiple studies have shown that ASV-based methods outperform traditional OTU clustering in accuracy.
-	•	Most importantly, DADA2 is one of the few tools that directly supports PacBio CCS reads, which was a major factor in my decision to use it!
+ \
+🔹 Why DADA2? \
+	•	Instead of clustering into OTUs (Operational Taxonomic Units), DADA2 provides ASVs (Amplicon Sequence Variants). \
+	•	ASVs provide higher accuracy while generating fewer total features than OTUs. \
+	•	Multiple studies have shown that ASV-based methods outperform traditional OTU clustering in accuracy. \
+	•	Most importantly, DADA2 is one of the few tools that directly supports PacBio CCS reads, which was a major factor in my decision to use it! \
 
 Now, let’s dive into the DADA2 command I used for analysis! 🚀
 
@@ -163,22 +163,22 @@ We will use ccs_reads.qza (generated from raw data) as the input for DADA2.
 
 For --p-front / --p-adapter, I specified the primer sequences according to the correct orientation.
 For --p-min-len / --p-max-len, I followed the recommended DADA2 denoise-ccs length settings (1,000 - 1,600 bp).
-
+ \
 🔹 Output Files from DADA2
 
 Running DADA2 generates three key outputs:
-
-1️⃣ Feature Table (table.qza) → The number of unique features detected (Dereplicated Features)
-2️⃣ Representative Sequences (rep-seqs.qza) → The actual sequences of the identified features
-3️⃣ Denoising Statistics (denoising-stats.qza) → Filtering statistics, showing how reads were processed and retained
-
+ \
+1️⃣ Feature Table (table.qza) → The number of unique features detected (Dereplicated Features) \
+2️⃣ Representative Sequences (rep-seqs.qza) → The actual sequences of the identified features \
+3️⃣ Denoising Statistics (denoising-stats.qza) → Filtering statistics, showing how reads were processed and retained \
+ \
 🔹 Filtering Low-Frequency Features
 
 In my case, I applied Filter-features with a minimum frequency of 2.
 
-Why? 🤔
-	•	A feature that appears only once (frequency = 1) could be a random sequencing error rather than a true biological signal.
-	•	So, I filtered out singleton features (frequency = 1) to improve the reliability of my results.
+Why? 🤔 \
+	•	A feature that appears only once (frequency = 1) could be a random sequencing error rather than a true biological signal. \
+	•	So, I filtered out singleton features (frequency = 1) to improve the reliability of my results. \
 
 Of course, this threshold is flexible—you can apply stricter filters (e.g., 5 or 10) depending on your analysis needs.
 
@@ -189,17 +189,17 @@ If you inspect the ASV table, you’ll notice that feature names are in MD5 hash
 These hashed IDs allow us to differentiate ASVs, but we don’t yet know which taxonomy each feature belongs to—for that, we need a classifier.
 
 (Alternatively, you could export rep-seqs.qza and manually run BLAST search… but let’s be real, that would be exhausting! 😅)
-
+ \
 🔹 Choosing a Classifier
 
 For taxonomic classification, I used a Naive Bayes classifier.
 
 This is a classic machine-learning algorithm that classifies sequences based on conditional probabilities of each taxonomy.
 
-While alternative methods like BLASTN or Usearch exist, I prefer Naive Bayes because:
-✅ It is computationally efficient, as it compares k-mers instead of aligning full sequences
-✅ It is widely used and well-validated for 16S metabarcoding
-
+While alternative methods like BLASTN or Usearch exist, I prefer Naive Bayes because: \
+✅ It is computationally efficient, as it compares k-mers instead of aligning full sequences \
+✅ It is widely used and well-validated for 16S metabarcoding \
+ \
 🔹 Reference Database Selection
 
 To train the Naive Bayes classifier, we need a reference database.
@@ -258,7 +258,7 @@ qiime rescript evaluate-fit-classifier \
    --o-evaluation silva-138.2-ssu-nr99-fit-classifier-evaluation.qzv
 ```
 
-By following these steps, we can train a Naive Bayes classifier using the Silva 138.2 database for taxonomy assignment in QIIME 2.
+By following these steps, we can train a Naive Bayes classifier using the Silva 138.2 database for taxonomy assignment in QIIME 2. \
 🎉 And that’s it! We now have a trained Naive Bayes classifier (silva-138.2-classifier.qza) ready to assign taxonomy to our ASVs!
    * I can’t express enough gratitude to the developers of the RESCRIPt plugin for making this process so much easier! 🙌
 (출처: https://forum.qiime2.org/t/processing-filtering-and-evaluating-the-silva-database-and-other-reference-sequence-data-with-rescript/15494)
@@ -272,6 +272,7 @@ qiime feature-classifier classify-sklearn \
    --i-reads ccs_rep-reads.qza \
    --o-classification ccs_taxonomy.qza
 ```
+ \
 🔹 Generating a Taxonomy Bar Plot
 
 Now that we have our ccs_taxonomy.qza file, we can visualize the taxonomic composition of our samples by creating a bar plot!

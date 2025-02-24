@@ -41,3 +41,21 @@ https://docs.qiime2.org/2024.10/install/native/
 저는 Amplicon sequencing 결과를 기반으로 Metabarcoding 분석을 진행하기 때문에, Amplicon 버전을 통해서 설치를 완료했구요 버전은 2024.10 버전을 쓰고있으나 크게 업데이트로 인해 분석 흐름도가 바뀌지는 않아서 저는 여전히 2024.10 버전을 사용하고 있습니다.
 
 각자 환경에 Qiime이 설치되었다는 가정하에 설명을 이어나가보죠.
+
+Qiime 분석을 위해서는 Qiime에서 요구하는 .qza format으로 변환해야합니다.
+Import 과정에서는 
+   1. 본인이 무슨 파일을 가지고 있는지 (.fastq or .fasta or etc...)
+   2. 파일 경로는 정확히 어디로 설정되어있는지
+   3. 변환하고자 하는 파일의 형식은 무엇인지 (.qzv or .qza or etc...)
+를 반드시 고려한 뒤에 importing을 진행합니다.
+
+16S PacBio CCS에서는 .fastq.gz 파일 형태를 제공해주기 때문에, 우리는 이에 적합한 파일형태로서 .qza format으로 변환하고자 합니다.
+
+```Linux command
+qiime tools import \
+  --type 'SampleData[SequencesWithQuality]' \
+  --input-path manifest.tsv \
+  --input-format SingleEndFastqManifestPhred33V2 \
+  --output-path ccs_reads.qza
+```
+우리가 가지고 있는 PacBio CCS는 우선 Single end reads이며, Phred33V2를 사용하고, Quality score가 포함되어있는 FastQ format임을 감안해 다음과같은 명령어를 구성했고, 이를 실행하여 ccs_reads.qza 파일을 얻게 되었다.

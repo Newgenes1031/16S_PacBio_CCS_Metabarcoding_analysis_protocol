@@ -168,3 +168,64 @@ qiime rescript get-silva-data \
 ```
 
 rescript plugin을 사용하면 get-silva-data를 통해서 정말 편하게 Reference Sequences & Taxonomy 파일을 얻을 수 있다.
+이후 Rescript Plugin에서 권장하는 여러 방식들을 따라갈 수 있다.
+
+### Classifier training command line
+```Linux command
+qiime rescript reverse-transcribe \
+   --i-rna-sequences silva-138.2-ssu-nr99-rna-seqs.qza \
+   --o-dna-sequences silva-138.2-ssu-nr99-seqs.qza
+
+qiime rescript cull-seqs \
+   --i-sequences silva-138.2-ssu-nr99-seqs.qza \
+   --o-clean-sequences silva-138.2-ssu-nr99-seqs-cleaned.qza
+
+qiime rescript filter-seqs-length-by-taxon \
+   --i-sequences silva-138.2-ssu-nr99-seqs-cleaned.qza \
+   --i-taxonomy silva-138.2-ssu-nr99-tax.qza \
+   --p-labels Archaea Bacteria Eukaryota \
+   --p-min-lens 900 1200 1400 \
+   --o-filtered-seqs silva-138.2-ssu-nr99-seqs-filt.qza \
+   --o-discarded-seqs silva-138.2-ssu-nr99-seqs-discard.qza
+
+qiime rescript dereplicate \
+   --i-sequences silva-138.2-ssu-nr99-seqs-filt.qza  \
+   --i-taxa silva-138.2-ssu-nr99-tax.qza \
+   --p-mode 'uniq' \
+   --o-dereplicated-sequences silva-138.2-ssu-nr99-seqs-derep-uniq.qza \
+   --o-dereplicated-taxa silva-138.2-ssu-nr99-tax-derep-uniq.qza
+
+qiime rescript evaluate-fit-classifier \
+   --i-sequences silva-138.2-ssu-nr99-seqs-derep-uniq.qza \
+   --i-taxonomy silva-138.2-ssu-nr99-tax-derep-uniq.qza  \
+   --o-classifier silva-138.2-ssu-nr99-classifier.qza \
+   --o-observed-taxonomy silva-138.2-ssu-nr99-predicted-taxonomy.qza \
+   --o-evaluation silva-138.2-ssu-nr99-fit-classifier-evaluation.qzv
+```
+
+다음 일련의 과정을 통해 Silva 138.2 DB를 활용하여 만든 Taxonomy classifier (Naive bayes를 활용한)를 생성할 수 있다.
+정말 RESCRIPt plugin을 만들어준 이들에게 무한한 감사를...
+(출처: https://forum.qiime2.org/t/processing-filtering-and-evaluating-the-silva-database-and-other-reference-sequence-data-with-rescript/15494)
+
+
+이제 훈련된 Classifier를 통해서 주어진 Features들에 대해 Taxonomy 정보를 할당할 시간이다.
+커맨드는 다음과 같다.
+
+### Classifier running command line
+```Linux command
+qiime feature-classifier classify-sklearn \
+   --i-classifier silva-138.2-ssu-nr99-classifier.qza \
+   --i-reads ccs_rep-reads.qza \
+   --o-classification ccs_taxonomy.qza
+```
+생성된 ccs_taxonomy.qza 파일을 기반으로 Taxonomical classification barplot을 생성할 수 있다.
+
+### Creating Barplot command line
+```Linux command
+qiime taxa barplot \
+   --i-table ccs_table.qza \
+   --i-taxonomy ccs_taxonomy.qza \
+   --o-classification ccs_barplot.qzv
+```
+
+다음과 같이 생성된 barplot.qzv 파일을 Qiime2 View에 접속해서 첨부하면 샘플 내 종 분포를 확인할 수 있게 된다.

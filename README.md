@@ -143,3 +143,12 @@ Denoising statistics에는 Feature가 생성되기 까지 필터링된 서열의
 
 분석에 따라서 더 엄격한 기준 (5 or 10)을 사용할 수도 있다.
 
+# 5. Taxonomical classification
+생성된 ASVs table (table.qza)파일과 reads (rep-reads.qza)파일을 기반으로 Taxonomy 정보를 ASV table에 할당하는 과정이 필요하다.
+ASV table은 직접 확인해보면 알겠지만 이름들이 md5sum 형식을 취하고 있어서, Feature로 구분이 되어있긴 하되 그 Feature가 어떤 Taxonomy ID를 가지고 있는지는 Classifier를 통해 분류해야만 알 수 있다. (rep-reads.qza를 exporting해서 직접 blast searching 해볼수도 있긴하다.. 너무 고된일이라서 그렇지..)
+
+아무튼, 분류를 위해서는 Classifier를 만들어야하는데
+저자는 Naive-bayes classifier를 사용한다. 이는 머신러닝의 대표적인 Classifier로서 각 Taxonomy에 대한 조건부확률을 기반으로 주어진 서열에 대해서 분류를 하는 방식으로 고전적인 방식이다.
+
+이외에도 Alignment 기반의 BlastN, Usearch 방식도 있으나, 전체 서열을 모두 비교하는 것 보다 k-mer 기반으로 부분적으로 비교하여 Computational efficiency를 향상시킨 Naive-bayes classifier를 선호한다.
+
